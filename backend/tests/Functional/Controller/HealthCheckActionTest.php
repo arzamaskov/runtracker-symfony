@@ -15,7 +15,8 @@ final class HealthCheckActionTest extends TestCase
         $client = self::createClient();
 
         // act
-        $client->request(Request::METHOD_GET, '/healthcheck');
+        $router = self::getContainer()->get('router');
+        $client->request(Request::METHOD_GET, $router->generate('healthcheck'));
 
         // assert
         self::assertResponseIsSuccessful();
