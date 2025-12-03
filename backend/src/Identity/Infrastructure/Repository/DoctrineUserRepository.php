@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Identity\Infrastructure\Repository;
 
 use App\Identity\Domain\Entity\User;
-use App\Identity\Domain\Repository\UserRepository;
+use App\Identity\Domain\Repository\UserRepositoryInterface;
 use App\Identity\Domain\ValueObject\UserId;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-final class DoctrineRepository extends ServiceEntityRepository implements UserRepository
+final class DoctrineUserRepositoryInterface extends ServiceEntityRepository implements UserRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
