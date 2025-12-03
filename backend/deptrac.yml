@@ -1,0 +1,94 @@
+# Комплексная проверка DDD архитектуры: слои + модули
+deptrac:
+    paths:
+        - ./src
+    exclude_files:
+        - '#.*test.*#'
+        - '#.*Test.*#'
+
+    layers:
+        # === СЛОИ (LAYERS) ===
+        # Domain слои каждого модуля
+        - name: SharedDomain
+          collectors:
+              - type: directory
+                value: /src/Shared/Domain/.*
+
+        - name: IdentityDomain
+          collectors:
+              - type: directory
+                value: /src/Identity/Domain/.*
+
+        # Application слои каждого модуля
+        - name: SharedApplication
+          collectors:
+              - type: directory
+                value: /src/Shared/Application/.*
+
+        - name: IdentityApplication
+          collectors:
+              - type: directory
+                value: /src/Identity/Application/.*
+
+        # Infrastructure слои каждого модуля
+        - name: SharedInfrastructure
+          collectors:
+              - type: directory
+                value: /src/Shared/Infrastructure/.*
+
+        - name: IdentityInfrastructure
+          collectors:
+              - type: directory
+                value: /src/Identity/Infrastructure/.*
+
+        # Presentation слои каждого модуля
+        - name: SharedPresentation
+          collectors:
+              - type: directory
+                value: /src/Shared/Presentation/.*
+
+        - name: IdentityPresentation
+          collectors:
+              - type: directory
+                value: /src/Identity/Presentation/.*
+
+    ruleset:
+        # === ПРАВИЛА ДЛЯ SHARED МОДУЛЯ ===
+        SharedDomain: []
+
+        SharedApplication:
+            - SharedDomain
+
+        SharedInfrastructure:
+            - SharedDomain
+            - SharedApplication
+
+        SharedPresentation:
+            - SharedDomain
+            - SharedApplication
+            - SharedInfrastructure
+
+        # === ПРАВИЛА ДЛЯ IDENTITY МОДУЛЯ ===
+        IdentityDomain:
+            - SharedDomain  # Domain может использовать только Shared Domain
+
+        IdentityApplication:
+            - IdentityDomain
+            - SharedDomain
+            - SharedApplication
+
+        IdentityInfrastructure:
+            - IdentityDomain
+            - IdentityApplication
+            - SharedDomain
+            - SharedApplication
+            - SharedInfrastructure
+
+        IdentityPresentation:
+            - IdentityDomain
+            - IdentityApplication
+            - IdentityInfrastructure
+            - SharedDomain
+            - SharedApplication
+            - SharedInfrastructure
+            - SharedPresentation
