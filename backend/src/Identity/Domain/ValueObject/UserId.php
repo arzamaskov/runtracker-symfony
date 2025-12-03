@@ -26,6 +26,11 @@ final class UserId implements \Stringable
         return new self(Uuid::fromString($userId));
     }
 
+    public static function fromUuid(Uuid $userId): self
+    {
+        return new self($userId);
+    }
+
     public function value(): Uuid
     {
         return $this->userId;

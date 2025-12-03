@@ -12,7 +12,7 @@ final class User
         private readonly UserId $id,
         private string $email,
         private string $password,
-        private readonly array $roles = ['ROLE_USER']
+        private readonly array $roles = ['ROLE_USER'],
     ) {
     }
 

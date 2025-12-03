@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Identity\Infrastructure\Database\Doctrine\Type;
 
+use App\Identity\Domain\ValueObject\UserId;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Exception\InvalidType;
 use Doctrine\DBAL\Types\Exception\ValueNotConvertible;
@@ -16,24 +17,37 @@ final class UserIdType extends Type
 
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
-        return $platform->getBinaryTypeDeclarationSQL([
-            'length' => 16,
-            'fixed' => true,
-        ]);
+        return 'UUID';
     }
 
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?Uuid
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?UserId
     {
         if (null === $value || '' === $value) {
             return null;
         }
 
-        if ($value instanceof Uuid) {
+        if ($value instanceof UserId) {
             return $value;
         }
 
         try {
-            return Uuid::fromBinary($value);
+            // PostgreSQL может возвращать UUID как resource
+            if (is_resource($value)) {
+                $value = stream_get_contents($value);
+                if (false === $value) {
+                    throw new \RuntimeException('Failed to read UUID from stream');
+                }
+            }
+
+            if (!is_string($value)) {
+                throw new \InvalidArgumentException(
+                    sprintf('Expected string value, got %s', get_debug_type($value))
+                );
+            }
+
+            $uuid = Uuid::fromString($value);
+
+            return UserId::fromUuid($uuid);
         } catch (\Throwable $e) {
             throw ValueNotConvertible::new(
                 is_scalar($value) ? (string) $value : get_debug_type($value),
@@ -49,18 +63,22 @@ final class UserIdType extends Type
             return null;
         }
 
+        if ($value instanceof UserId) {
+            return $value->value()->toRfc4122();
+        }
+
         if ($value instanceof Uuid) {
-            return $value->toBinary();
+            return $value->toRfc4122();
         }
 
         if (is_string($value)) {
             try {
-                return Uuid::fromString($value)->toBinary();
+                return Uuid::fromString($value)->toRfc4122();
             } catch (\Throwable $e) {
                 throw InvalidType::new(
                     $value,
                     self::NAME,
-                    ['null', 'string', Uuid::class]
+                    ['null', 'string', UserId::class, Uuid::class]
                 );
             }
         }
@@ -68,7 +86,7 @@ final class UserIdType extends Type
         throw InvalidType::new(
             $value,
             self::NAME,
-            ['null', 'string', Uuid::class]
+            ['null', 'string', UserId::class, Uuid::class]
         );
     }
 }
