@@ -13,3 +13,9 @@ controllers:
         namespace: App\Shared\Presentation\Api\Controller
     type: attribute
     prefix: /api
+
+api_refresh_token:
+    path: /api/auth/token/refresh
+
+api_login_check:
+    path: /api/auth/token/login
