@@ -22,12 +22,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Identity/Infrastructure/Database/Doctrine/User'
                 prefix: 'App\Identity\Domain\Entity'
                 alias: Identity
-        #            IdentityInfrastructure:
-        #                type: xml
-        #                is_bundle: false
-        #                dir: '%kernel.project_dir%/src/Identity/Infrastructure/Database/Doctrine/RefreshToken'
-        #                prefix: 'App\Identity\Infrastructure\Entity'
-        #                alias: IdentityInfrastructure
+            IdentityInfrastructure:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Identity/Infrastructure/Database/Doctrine/RefreshToken'
+                prefix: 'App\Identity\Infrastructure\Entity'
+                alias: IdentityInfrastructure
 
         controller_resolver:
             auto_mapping: false
