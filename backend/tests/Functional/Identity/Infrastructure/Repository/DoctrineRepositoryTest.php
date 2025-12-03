@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Identity\Infrastructure\Repository;
 
 use App\Identity\Domain\Factory\UserFactory;
-use App\Identity\Domain\Repository\UserRepository;
-use App\Identity\Infrastructure\Repository\DoctrineRepository;
+use App\Identity\Domain\Repository\UserRepositoryInterface;
+use App\Identity\Infrastructure\Repository\DoctrineUserRepository;
 use App\Tests\Resource\Fixture\UserFixture;
 use App\Tests\TestCase;
 use App\Tests\Tools\FakerTools;
@@ -17,14 +17,14 @@ class DoctrineRepositoryTest extends TestCase
 {
     use FakerTools;
 
-    private UserRepository $repository;
+    private UserRepositoryInterface $repository;
     private UserFactory $factory;
     private AbstractDatabaseTool $databaseTool;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->repository = $this->getService(DoctrineRepository::class);
+        $this->repository = $this->getService(DoctrineUserRepository::class);
         $this->factory = $this->getService(UserFactory::class);
         $this->databaseTool = $this->getService(DatabaseToolCollection::class)->get();
     }
