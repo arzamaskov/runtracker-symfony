@@ -7,7 +7,7 @@ namespace App\Identity\Domain\Repository;
 use App\Identity\Domain\Entity\User;
 use App\Identity\Domain\ValueObject\UserId;
 
-interface UserRepository
+interface UserRepositoryInterface
 {
     public function add(User $user): void;
 

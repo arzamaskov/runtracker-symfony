@@ -10,7 +10,7 @@ use App\Identity\Domain\ValueObject\UserId;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-final class DoctrineUserRepositoryInterface extends ServiceEntityRepository implements UserRepositoryInterface
+final class DoctrineUserRepository extends ServiceEntityRepository implements UserRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
