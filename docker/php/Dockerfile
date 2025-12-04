@@ -22,8 +22,13 @@ WORKDIR /var/www/backend
 # Copy application files
 COPY backend/ /var/www/backend/
 
+# Create minimal .env file for composer scripts
+RUN echo "APP_ENV=prod" > /var/www/backend/.env && \
+    echo "APP_SECRET=dummy_secret_for_build" >> /var/www/backend/.env
+
 # Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction || true
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts || true && \
+    composer dump-autoload --optimize --no-dev --classmap-authoritative || true
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/backend
