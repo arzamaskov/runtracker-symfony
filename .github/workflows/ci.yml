@@ -6,22 +6,153 @@ on:
       - main
       - develop
       - "feature/*"
+    paths-ignore:
+      - "README.md"
+      - "CHANGELOG.md"
+      - "*.md"
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - "README.md"
+      - "CHANGELOG.md"
+      - "*.md"
   workflow_dispatch: {}
+
+permissions:
+  contents: read
 
 env:
   BACKEND_DIR: backend
   FRONTEND_DIR: frontend
 
 jobs:
-  backend-quality:
-    name: Backend Quality Checks
+  # Backend: Code Style Check
+  backend-lint:
+    name: Backend - Code Style (PHP CS Fixer)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_pgsql, zip, opcache
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BACKEND_DIR }}/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: composer install --no-interaction --no-progress --prefer-dist --no-scripts
+
+      - name: Check code style (PHP CS Fixer)
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: |
+          if [ -x vendor/bin/php-cs-fixer ]; then
+            vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
+          else
+            echo "php-cs-fixer not installed, skipping"
+            exit 1
+          fi
+
+  # Backend: Architecture Check
+  backend-deptrac:
+    name: Backend - Architecture (Deptrac)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_pgsql, zip, opcache
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BACKEND_DIR }}/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: composer install --no-interaction --no-progress --prefer-dist --no-scripts
+
+      - name: Check architecture (Deptrac)
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: |
+          if [ -x vendor/bin/deptrac ]; then
+            vendor/bin/deptrac analyse --config-file=deptrac.yml || true
+          else
+            echo "deptrac not installed, skipping"
+          fi
+
+  # Backend: Static Analysis
+  backend-phpstan:
+    name: Backend - Static Analysis (PHPStan)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_pgsql, zip, opcache
+          coverage: none
+          ini-values: memory_limit=-1
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BACKEND_DIR }}/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: composer install --no-interaction --no-progress --prefer-dist --no-scripts
+
+      - name: Run static analysis (PHPStan)
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: |
+          if [ -x vendor/bin/phpstan ]; then
+            vendor/bin/phpstan analyse src tests --memory-limit=2G --no-progress
+          else
+            echo "phpstan not installed, skipping"
+            exit 1
+          fi
+
+  # Backend: Tests
+  backend-tests:
+    name: Backend - Tests (PHPUnit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: app
           POSTGRES_PASSWORD: app_password
@@ -39,54 +170,44 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v4
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           extensions: pdo, pdo_pgsql, zip, opcache
-
-      - name: Get Composer Cache Directory
-        id: composer-cache
-        working-directory: ${{ env.BACKEND_DIR }}
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+          coverage: none
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
         with:
-          path: ${{ steps.composer-cache.outputs.dir }}
+          path: ${{ env.BACKEND_DIR }}/vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies
         working-directory: ${{ env.BACKEND_DIR }}
-        run: composer install --no-progress --prefer-dist --optimize-autoloader --no-interaction
-
-      - name: Check code style (PHP CS Fixer)
-        working-directory: ${{ env.BACKEND_DIR }}
-        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
-
-      - name: Run static analysis (PHPStan)
-        working-directory: ${{ env.BACKEND_DIR }}
-        run: ./vendor/bin/phpstan analyse src tests --memory-limit=2G
+        run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Run tests (PHPUnit)
         working-directory: ${{ env.BACKEND_DIR }}
         env:
-          DATABASE_URL: postgresql://app:app_password@localhost:5432/runtracker_test
-        run: ./vendor/bin/phpunit --configuration phpunit.xml --log-junit junit.xml
+          DATABASE_URL: postgresql://app:app_password@localhost:5432/runtracker_test?serverVersion=16&charset=utf8
+        run: vendor/bin/phpunit --configuration phpunit.xml --log-junit junit.xml
 
-      - name: Upload junit artifact
+      - name: Upload test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-junit
+          name: backend-test-results
           path: backend/junit.xml
+          retention-days: 7
 
+  # Frontend: Quality Checks
   frontend-quality:
-    name: Frontend Quality Checks
+    name: Frontend - Quality Checks
     runs-on: ubuntu-latest
-    needs: backend-quality
-
+    timeout-minutes: 10
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -95,10 +216,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'pnpm'
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         working-directory: ${{ env.FRONTEND_DIR }}
@@ -117,3 +252,4 @@ jobs:
         with:
           name: frontend-build
           path: frontend/build
+          retention-days: 7

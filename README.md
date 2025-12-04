@@ -115,14 +115,16 @@ Workflow автоматически:
 
 Для работы CI/CD необходимо настроить следующие секреты в настройках репозитория:
 
-| Secret | Описание |
-|--------|----------|
-| `GHCR_TOKEN` | Personal Access Token с правами `write:packages` |
-| `GHCR_USERNAME` | Имя пользователя GitHub |
-| `SSH_HOST` | IP адрес или hostname продакшен сервера |
-| `SSH_PORT` | SSH порт (обычно 22) |
-| `SSH_USER` | SSH пользователь |
-| `SSH_KEY` | Приватный SSH ключ для доступа к серверу |
+| Secret | Описание | Обязательно |
+|--------|----------|-------------|
+| `SSH_HOST` | IP адрес или hostname продакшен сервера | ✅ Да |
+| `SSH_PORT` | SSH порт (обычно 22) | ✅ Да |
+| `SSH_USER` | SSH пользователь | ✅ Да |
+| `SSH_KEY` | Приватный SSH ключ для доступа к серверу | ✅ Да |
+| `GHCR_TOKEN` | Personal Access Token с правами `write:packages` | ⚪ Опционально* |
+| `GHCR_USERNAME` | Имя пользователя GitHub | ⚪ Опционально* |
+
+> *По умолчанию используется встроенный `GITHUB_TOKEN`. Кастомные `GHCR_TOKEN` и `GHCR_USERNAME` нужны только если требуется использовать собственный токен.
 
 ## Production Deploy
 
