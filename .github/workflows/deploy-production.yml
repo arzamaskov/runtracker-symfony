@@ -1,0 +1,83 @@
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: {}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/runtracker
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: image-tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            cd /opt/run-app
+
+            APP_IMAGE="${{ env.IMAGE_PREFIX }}:app-${{ steps.image-tag.outputs.tag }}"
+            WEB_IMAGE="${{ env.IMAGE_PREFIX }}:web-${{ steps.image-tag.outputs.tag }}"
+
+            # Update docker-compose.production.yml by replacing placeholders IMAGE_APP / IMAGE_WEB
+            # (Make sure your compose file contains these placeholders or adjust sed accordingly)
+            sed -i "s|IMAGE_APP|${APP_IMAGE}|g" docker-compose.production.yml
+            sed -i "s|IMAGE_WEB|${WEB_IMAGE}|g" docker-compose.production.yml
+
+            # Login to GHCR
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+
+            # Pull and restart
+            docker compose -f docker-compose.production.yml pull
+            docker compose -f docker-compose.production.yml down --remove-orphans
+            docker compose -f docker-compose.production.yml up -d --remove-orphans
+
+            # Wait a bit
+            sleep 10
+
+            # Run database migrations (non-interactive)
+            docker compose -f docker-compose.production.yml exec -T app php bin/console doctrine:migrations:migrate --no-interaction || true
+
+            # Warmup cache
+            docker compose -f docker-compose.production.yml exec -T app php bin/console cache:clear --no-warmup || true
+            docker compose -f docker-compose.production.yml exec -T app php bin/console cache:warmup || true
+
+            # Restart workers
+            docker compose -f docker-compose.production.yml restart || true
+
+            echo "Deployment finished: ${APP_IMAGE} / ${WEB_IMAGE}"
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /opt/run-app
+            docker compose -f docker-compose.production.yml ps
+            echo "Deployment check done."
