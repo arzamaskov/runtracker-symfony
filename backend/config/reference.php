@@ -904,6 +904,12 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     keep_database_and_schema?: bool, // Default: false
  *     cache_metadata?: bool, // Default: true
  * }
+ * @psalm-type DamaDoctrineTestConfig = array{
+ *     enable_static_connection?: mixed, // Default: true
+ *     enable_static_meta_data_cache?: bool, // Default: true
+ *     enable_static_query_cache?: bool, // Default: true
+ *     connection_keys?: list<mixed>,
+ * }
  * @psalm-type SecurityConfig = array{
  *     access_denied_url?: scalar|null, // Default: null
  *     session_fixation_strategy?: "none"|"migrate"|"invalidate", // Default: "migrate"
@@ -1341,12 +1347,6 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     logout_firewall?: scalar|null, // Name of the firewall that triggers the logout event to hook into (default: api) // Default: "api"
  *     return_expiration?: scalar|null, // When true, the response will include the token expiration timestamp // Default: false
  *     return_expiration_parameter_name?: scalar|null, // The default response parameter name containing the refresh token expiration timestamp // Default: "refresh_token_expiration"
- * }
- * @psalm-type DamaDoctrineTestConfig = array{
- *     enable_static_connection?: mixed, // Default: true
- *     enable_static_meta_data_cache?: bool, // Default: true
- *     enable_static_query_cache?: bool, // Default: true
- *     connection_keys?: list<mixed>,
  * }
  * @psalm-type ConfigType = array{
  *     imports?: ImportsConfig,
