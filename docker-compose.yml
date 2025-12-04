@@ -2,14 +2,34 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: runtracker_postgres_prod
+    container_name: runtracker_db_dev
     environment:
       POSTGRES_DB: ${DB_NAME:-runtracker}
       POSTGRES_USER: ${DB_USER:-app}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-app_password}
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-app} -d ${DB_NAME:-runtracker}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - runtracker_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: runtracker_redis_dev
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - runtracker_network
 
@@ -17,42 +37,56 @@ services:
   php:
     build:
       context: .
-      dockerfile: docker/php/Dockerfile
-    container_name: runtracker_php_prod
+      dockerfile: docker/php/Dockerfile.dev
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: runtracker_php_dev
+    working_dir: /var/www/backend
+    volumes:
+      - ./backend:/var/www/backend
     environment:
-      DATABASE_URL: postgresql://${DB_USER:-app}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-runtracker}
-      APP_ENV: prod
+      APP_ENV: dev
+      DATABASE_URL: postgresql://${DB_USER:-app}:${DB_PASSWORD:-app_password}@postgres:5432/${DB_NAME:-runtracker}?serverVersion=16&charset=utf8
+      REDIS_URL: redis://redis:6379
+      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
+      PHP_IDE_CONFIG: "serverName=Docker"
     depends_on:
-      - postgres
-    restart: unless-stopped
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - runtracker_network
 
-  # Frontend (build static files)
+  # Frontend Development Server (Vite)
   frontend:
-    build:
-      context: .
-      dockerfile: docker/frontend/Dockerfile
-    container_name: runtracker_frontend_build
+    image: node:22-alpine
+    container_name: runtracker_frontend_dev
+    working_dir: /app
     volumes:
-      - frontend_build:/usr/share/nginx/html
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.svelte-kit
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm run dev --host"
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost/api
     networks:
       - runtracker_network
 
   # Nginx Web Server
   nginx:
     image: nginx:alpine
-    container_name: runtracker_nginx_prod
+    container_name: runtracker_nginx_dev
     ports:
       - "80:80"
     volumes:
-      - frontend_build:/var/www:ro
-      - ./backend:/app/backend:ro
-      - ./docker/nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - php
       - frontend
-    restart: unless-stopped
     networks:
       - runtracker_network
 
@@ -62,4 +96,3 @@ networks:
 
 volumes:
   postgres_data:
-  frontend_build:
