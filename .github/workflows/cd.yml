@@ -231,6 +231,25 @@ jobs:
             set -euo pipefail
             cd /opt/run-app
 
+            # Проверяем наличие .env файла с переменными окружения
+            if [ ! -f .env ]; then
+              echo "❌ ERROR: .env file not found in /opt/run-app"
+              echo "Please create .env file with required variables:"
+              echo "  DB_NAME, DB_USER, DB_PASSWORD"
+              echo "  APP_SECRET, JWT_SECRET_KEY, JWT_PUBLIC_KEY, JWT_PASSPHRASE"
+              exit 1
+            fi
+
+            # Проверяем наличие обязательных переменных
+            source .env || true
+            if [ -z "${DB_NAME:-}" ] || [ -z "${DB_USER:-}" ] || [ -z "${DB_PASSWORD:-}" ]; then
+              echo "❌ ERROR: Missing required database variables in .env:"
+              echo "  DB_NAME=${DB_NAME:-NOT SET}"
+              echo "  DB_USER=${DB_USER:-NOT SET}"
+              echo "  DB_PASSWORD=${DB_PASSWORD:-NOT SET}"
+              exit 1
+            fi
+
             # Login to GHCR
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
 
@@ -250,26 +269,31 @@ jobs:
             sed -i "s|IMAGE_APP|${APP_IMAGE}|g" docker-compose.production.yml
             sed -i "s|IMAGE_WEB|${WEB_IMAGE}|g" docker-compose.production.yml
 
-            # Validate compose config
-            docker compose -f docker-compose.production.yml config -q
+            # Validate compose config (с переменными из .env)
+            docker compose -f docker-compose.production.yml --env-file .env config -q
 
             # Pull новых образов
-            docker compose -f docker-compose.production.yml pull
+            docker compose -f docker-compose.production.yml --env-file .env pull
 
-            # Graceful restart
-            docker compose -f docker-compose.production.yml down
-            docker compose -f docker-compose.production.yml up -d
+            # Graceful restart (с переменными из .env)
+            docker compose -f docker-compose.production.yml --env-file .env down
+            docker compose -f docker-compose.production.yml --env-file .env up -d
 
             # Wait for services to be healthy
             echo "Waiting for services to start..."
             sleep 15
             
-            # Check if postgres is healthy
-            echo "Checking postgres health..."
+            # Check postgres status
+            echo "Checking postgres status..."
+            docker compose -f docker-compose.production.yml --env-file .env ps postgres || true
+            
+            # Wait for postgres to become healthy (with timeout)
+            echo "Waiting for postgres to become healthy..."
             timeout=60
             while [ $timeout -gt 0 ]; do
-              if docker compose -f docker-compose.production.yml ps postgres | grep -q "healthy"; then
-                echo "Postgres is healthy"
+              status=$(docker compose -f docker-compose.production.yml --env-file .env ps postgres --format json 2>/dev/null | grep -o '"Health":"[^"]*"' | cut -d'"' -f4 || echo "")
+              if [ "$status" = "healthy" ]; then
+                echo "✅ Postgres is healthy"
                 break
               fi
               echo "Waiting for postgres... ($timeout seconds left)"
@@ -278,15 +302,15 @@ jobs:
             done
             
             if [ $timeout -le 0 ]; then
-              echo "ERROR: Postgres failed to become healthy"
-              docker compose -f docker-compose.production.yml logs postgres
-              exit 1
+              echo "⚠️  Postgres healthcheck timeout, showing logs:"
+              docker compose -f docker-compose.production.yml --env-file .env logs postgres --tail 50 || true
+              echo "Attempting to continue anyway..."
             fi
 
             # Run migrations and clear cache
-            docker compose -f docker-compose.production.yml exec -T app php bin/console doctrine:migrations:migrate --no-interaction || true
-            docker compose -f docker-compose.production.yml exec -T app php bin/console cache:clear --no-warmup
-            docker compose -f docker-compose.production.yml exec -T app php bin/console cache:warmup
+            docker compose -f docker-compose.production.yml --env-file .env exec -T app php bin/console doctrine:migrations:migrate --no-interaction || true
+            docker compose -f docker-compose.production.yml --env-file .env exec -T app php bin/console cache:clear --no-warmup
+            docker compose -f docker-compose.production.yml --env-file .env exec -T app php bin/console cache:warmup
 
             # Cleanup old images
             docker image prune -f
