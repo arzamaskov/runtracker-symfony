@@ -59,39 +59,6 @@ services:
     networks:
       - runtracker_network
 
-  # Queue Worker
-  queue:
-    image: IMAGE_APP
-    container_name: run-app-queue-1
-    command: php bin/console messenger:consume async --time-limit=3600 --memory-limit=128M
-    environment:
-      APP_ENV: prod
-      APP_SECRET: ${APP_SECRET}
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?serverVersion=16&charset=utf8
-      REDIS_URL: redis://redis:6379
-      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
-    depends_on:
-      - app
-    restart: unless-stopped
-    networks:
-      - runtracker_network
-
-  # Scheduler (Cron)
-  scheduler:
-    image: IMAGE_APP
-    container_name: run-app-scheduler-1
-    command: php bin/console messenger:consume scheduler --time-limit=3600
-    environment:
-      APP_ENV: prod
-      APP_SECRET: ${APP_SECRET}
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?serverVersion=16&charset=utf8
-      REDIS_URL: redis://redis:6379
-    depends_on:
-      - app
-    restart: unless-stopped
-    networks:
-      - runtracker_network
-
   # Nginx + Frontend
   web:
     image: IMAGE_WEB
