@@ -36,21 +36,23 @@ ARG GID=1000
 RUN addgroup -g $GID app && \
     adduser -u $UID -G app -s /bin/sh -D app
 
-# Copy and setup entrypoint script
-COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# Create cache and log directories with proper permissions
-# Create subdirectories for all environments to avoid permission issues at runtime
+# Create cache and log directories with proper permissions AFTER copying files
+# This ensures directories exist even if var/ is in .gitignore
 RUN mkdir -p /var/www/backend/var/cache/prod \
              /var/www/backend/var/cache/dev \
              /var/www/backend/var/cache/test \
              /var/www/backend/var/log && \
     chown -R www-data:www-data /var/www/backend && \
     chmod -R 755 /var/www/backend && \
-    chmod -R 775 /var/www/backend/var
+    chmod 775 /var/www/backend/var && \
+    chmod -R 775 /var/www/backend/var/cache && \
+    chmod -R 775 /var/www/backend/var/log && \
+    # Ensure www-data can write to var directory
+    chown -R www-data:www-data /var/www/backend/var && \
+    # Verify directories exist
+    test -d /var/www/backend/var/cache/prod && \
+    test -d /var/www/backend/var/log
 
 EXPOSE 9000
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["php-fpm"]
