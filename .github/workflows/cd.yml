@@ -262,7 +262,26 @@ jobs:
 
             # Wait for services to be healthy
             echo "Waiting for services to start..."
-            sleep 10
+            sleep 15
+            
+            # Check if postgres is healthy
+            echo "Checking postgres health..."
+            timeout=60
+            while [ $timeout -gt 0 ]; do
+              if docker compose -f docker-compose.production.yml ps postgres | grep -q "healthy"; then
+                echo "Postgres is healthy"
+                break
+              fi
+              echo "Waiting for postgres... ($timeout seconds left)"
+              sleep 2
+              timeout=$((timeout - 2))
+            done
+            
+            if [ $timeout -le 0 ]; then
+              echo "ERROR: Postgres failed to become healthy"
+              docker compose -f docker-compose.production.yml logs postgres
+              exit 1
+            fi
 
             # Run migrations and clear cache
             docker compose -f docker-compose.production.yml exec -T app php bin/console doctrine:migrations:migrate --no-interaction || true
