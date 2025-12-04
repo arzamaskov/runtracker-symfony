@@ -25,7 +25,7 @@ RUN echo "xdebug.mode=debug,coverage" >> /usr/local/etc/php/conf.d/docker-php-ex
     && echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
-# Create system user to run Composer and Artisan Commands
+# Create system user to run Composer and Symfony Console commands
 ARG UID=1000
 ARG GID=1000
 RUN addgroup -g $GID app && \

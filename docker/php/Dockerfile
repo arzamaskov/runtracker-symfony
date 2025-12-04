@@ -30,17 +30,27 @@ RUN echo "APP_ENV=prod" > /var/www/backend/.env && \
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts || true && \
     composer dump-autoload --optimize --no-dev --classmap-authoritative || true
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/backend
-
-# Create system user to run Composer and Artisan Commands
+# Create system user to run Composer and Symfony Console commands
 ARG UID=1000
 ARG GID=1000
 RUN addgroup -g $GID app && \
     adduser -u $UID -G app -s /bin/sh -D app
 
-USER app
+# Copy and setup entrypoint script
+COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Create cache and log directories with proper permissions
+# Create subdirectories for all environments to avoid permission issues at runtime
+RUN mkdir -p /var/www/backend/var/cache/prod \
+             /var/www/backend/var/cache/dev \
+             /var/www/backend/var/cache/test \
+             /var/www/backend/var/log && \
+    chown -R www-data:www-data /var/www/backend && \
+    chmod -R 755 /var/www/backend && \
+    chmod -R 775 /var/www/backend/var
 
 EXPOSE 9000
 
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["php-fpm"]
