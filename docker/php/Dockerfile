@@ -1,14 +1,18 @@
 FROM php:8.4-fpm-alpine
 
-# Install system dependencies
-RUN apk add --no-cache \
+# Install build dependencies (needed for compiling PHP extensions)
+RUN apk add --no-cache --virtual .build-deps \
     git \
     curl \
     postgresql-dev \
     libzip-dev \
     zip \
     unzip \
-    && docker-php-ext-install pdo pdo_pgsql zip opcache
+    && docker-php-ext-install pdo pdo_pgsql zip opcache \
+    && apk del .build-deps \
+    && apk add --no-cache \
+    postgresql-libs \
+    libzip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -19,33 +23,33 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 # Set working directory
 WORKDIR /var/www/backend
 
-# Copy application files
-COPY backend/ /var/www/backend/
+# Copy composer files first (for better layer caching)
+COPY backend/composer.json backend/composer.lock ./
 
 # Create minimal .env file for composer scripts
-RUN echo "APP_ENV=prod" > /var/www/backend/.env && \
-    echo "APP_SECRET=dummy_secret_for_build" >> /var/www/backend/.env
+RUN echo "APP_ENV=prod" > .env && \
+    echo "APP_SECRET=dummy_secret_for_build" >> .env
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts || true && \
-    composer dump-autoload --optimize --no-dev --classmap-authoritative || true
+# Install dependencies and remove Composer
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts && \
+    composer dump-autoload --optimize --no-dev --classmap-authoritative && \
+    rm -rf /usr/bin/composer
 
-# Create system user to run Composer and Symfony Console commands
+# Copy application files (after dependencies are installed)
+COPY backend/ ./
+
+# Create system user
 ARG UID=1000
 ARG GID=1000
 RUN addgroup -g $GID app && \
     adduser -u $UID -G app -s /bin/sh -D app
 
 # Create cache and log directories with proper permissions
-RUN mkdir -p /var/www/backend/var/cache/prod \
-             /var/www/backend/var/cache/dev \
-             /var/www/backend/var/cache/test \
-             /var/www/backend/var/log && \
+RUN mkdir -p var/cache/prod var/log && \
     chown -R www-data:www-data /var/www/backend && \
     chmod -R 755 /var/www/backend && \
-    chmod 775 /var/www/backend/var && \
-    chmod -R 775 /var/www/backend/var/cache && \
-    chmod -R 775 /var/www/backend/var/log
+    chmod 775 var && \
+    chmod -R 775 var/cache var/log
 
 EXPOSE 9000
 

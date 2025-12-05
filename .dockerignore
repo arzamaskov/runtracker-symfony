@@ -1,0 +1,44 @@
+# Кеш и временные файлы Symfony
+backend/var/
+backend/.env
+backend/.env.local
+backend/.env.*.local
+
+# Тесты (не нужны в production)
+backend/tests/
+backend/phpunit.xml
+backend/phpunit.dist.xml
+
+# Инструменты разработки (не нужны в production)
+backend/deptrac.yml
+backend/phpstan.neon
+backend/phpstan.dist.neon
+
+# IDE и OS файлы
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.git/
+.gitignore
+
+# Документация
+*.md
+README.md
+AGENT.md
+
+# CI/CD (не нужны в образе)
+.github/
+
+# Docker файлы (не нужны внутри образа)
+docker/
+docker-compose*.yml
+Makefile
+
+# Frontend (собирается отдельно)
+frontend/
+
+# Логи
+*.log
+
