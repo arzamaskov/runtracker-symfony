@@ -220,16 +220,27 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           command_timeout: 20m
-          envs: IMAGE_NAME,GITHUB_SHA,GHCR_USERNAME,GHCR_TOKEN
+          envs: IMAGE_NAME,GITHUB_SHA,GHCR_USERNAME,GHCR_TOKEN,GITHUB_REPOSITORY
           script: |
             set -euo pipefail
             cd /opt/run-app
+
+            # Обновляем docker-compose.production.yml из репозитория
+            echo "Updating docker-compose.production.yml from repository..."
+            curl -fsSL \
+              -H "Authorization: token ${GHCR_TOKEN}" \
+              -H "Accept: application/vnd.github.v3.raw" \
+              -o docker-compose.production.yml.new \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/docker-compose.production.yml?ref=${GITHUB_SHA}" \
+              && mv docker-compose.production.yml.new docker-compose.production.yml \
+              || echo "⚠️  Failed to download docker-compose.production.yml, using existing file"
 
             # Проверяем наличие .env файла с переменными окружения
             if [ ! -f .env ]; then
