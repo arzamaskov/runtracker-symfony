@@ -30,13 +30,15 @@ COPY backend/composer.json backend/composer.lock ./
 RUN echo "APP_ENV=prod" > .env && \
     echo "APP_SECRET=dummy_secret_for_build" >> .env
 
-# Install dependencies and remove Composer
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts && \
-    composer dump-autoload --optimize --no-dev --classmap-authoritative && \
-    rm -rf /usr/bin/composer
+# Install dependencies (without optimized autoload yet)
+RUN composer install --no-dev --no-interaction --no-scripts
 
-# Copy application files (after dependencies are installed)
+# Copy application files (before autoload optimization)
 COPY backend/ ./
+
+# Optimize autoload AFTER all files are copied
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative && \
+    rm -rf /usr/bin/composer
 
 # Create system user
 ARG UID=1000
