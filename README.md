@@ -149,6 +149,7 @@ cp .env.production .env
 # Заполните значения:
 # - APP_SECRET (сгенерируйте: openssl rand -hex 32)
 # - DB_PASSWORD (надежный пароль для PostgreSQL)
+# - DEFAULT_URI (базовый URL вашего приложения, например: https://runtracker.ru)
 # - JWT_PASSPHRASE (сгенерируйте JWT ключи - см. комментарии в .env)
 nano .env
 ```
