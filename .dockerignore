@@ -36,8 +36,12 @@ docker/
 docker-compose*.yml
 Makefile
 
-# Frontend (собирается отдельно)
-frontend/
+# Frontend - исключаем только ненужные части
+frontend/node_modules/
+frontend/build/
+frontend/.svelte-kit/
+frontend/.pnpm-store/
+frontend/.vite/
 
 # Логи
 *.log
