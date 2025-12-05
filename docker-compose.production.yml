@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: run-app-db-1
+    container_name: runtracker-db-prod
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -22,7 +22,7 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: run-app-redis-1
+    container_name: runtracker-redis-prod
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
@@ -35,7 +35,7 @@ services:
   # PHP Backend Application
   app:
     image: IMAGE_APP
-    container_name: run-app-app-1
+    container_name: runtracker-php-prod
     environment:
       APP_ENV: prod
       APP_SECRET: ${APP_SECRET}
@@ -63,7 +63,7 @@ services:
   # Nginx + Frontend
   web:
     image: IMAGE_WEB
-    container_name: run-app-web-1
+    container_name: runtracker-nginx-prod
     ports:
       - "8081:80"
     depends_on:

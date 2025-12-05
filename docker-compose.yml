@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: runtracker_db_dev
+    container_name: runtracker-db-dev
     environment:
       POSTGRES_DB: ${DB_NAME:-runtracker}
       POSTGRES_USER: ${DB_USER:-app}
@@ -22,7 +22,7 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: runtracker_redis_dev
+    container_name: runtracker-redis-dev
     ports:
       - "6379:6379"
     healthcheck:
@@ -41,7 +41,7 @@ services:
       args:
         UID: ${UID:-1000}
         GID: ${GID:-1000}
-    container_name: runtracker_php_dev
+    container_name: runtracker-php-dev
     working_dir: /var/www/backend
     volumes:
       - ./backend:/var/www/backend
@@ -62,7 +62,7 @@ services:
   # Frontend Development Server (Vite)
   frontend:
     image: node:22-alpine
-    container_name: runtracker_frontend_dev
+    container_name: runtracker-frontend-dev
     working_dir: /app
     volumes:
       - ./frontend:/app
@@ -79,7 +79,7 @@ services:
   # Nginx Web Server
   nginx:
     image: nginx:alpine
-    container_name: runtracker_nginx_dev
+    container_name: runtracker-nginx-dev
     ports:
       - "80:80"
     volumes:
