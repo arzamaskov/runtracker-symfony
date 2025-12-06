@@ -11,6 +11,7 @@ final class User
     public function __construct(
         private readonly UserId $id,
         private string $email,
+        private string $name,
         private ?string $password,
         private readonly array $roles = ['ROLE_USER'],
     ) {
@@ -36,6 +37,11 @@ final class User
         return $this->roles;
     }
 
+    public function name(): string
+    {
+        return $this->name;
+    }
+
     public function changeEmail(string $newEmail): void
     {
         $this->email = $newEmail;
@@ -44,5 +50,10 @@ final class User
     public function changePassword(string $newPassword): void
     {
         $this->password = $newPassword;
+    }
+
+    public function changeName(string $newName): void
+    {
+        $this->name = $newName;
     }
 }

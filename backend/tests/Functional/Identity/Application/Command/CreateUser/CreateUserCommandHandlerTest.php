@@ -27,7 +27,11 @@ class CreateUserCommandHandlerTest extends TestCase
     public function test_user_created_successfully(): void
     {
         // arrange
-        $command = new CreateUserCommand($this->getFaker()->email(), $this->getFaker()->password());
+        $command = new CreateUserCommand(
+            email: $this->getFaker()->email(),
+            name: $this->getFaker()->name(),
+            password: $this->getFaker()->password()
+        );
 
         // act
         $userId = $this->commandBus->execute($command);

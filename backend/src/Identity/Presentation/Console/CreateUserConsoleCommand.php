@@ -25,6 +25,7 @@ final class CreateUserConsoleCommand extends Command
             ->setName('app:user:create')
             ->setDescription('Создать нового пользователя')
             ->addArgument('email', InputArgument::REQUIRED, 'Email пользователя')
+            ->addArgument('name', InputArgument::REQUIRED, 'Имя пользователя')
             ->addArgument('password', InputArgument::REQUIRED, 'Пароль пользователя')
         ;
     }
@@ -32,9 +33,10 @@ final class CreateUserConsoleCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $email = $input->getArgument('email');
+        $name = $input->getArgument('name');
         $password = $input->getArgument('password');
 
-        $command = new CreateUserCommand($email, $password);
+        $command = new CreateUserCommand($email, $name, $password);
 
         try {
             $userId = $this->commandBus->execute($command);

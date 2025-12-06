@@ -15,7 +15,7 @@ readonly class UserFactory
     {
     }
 
-    public function create(string $email, string $hashedPassword): User
+    public function create(string $email, string $name, string $hashedPassword): User
     {
         if ($this->userRepository->findByEmail($email)) {
             throw new EmailAlreadyExistsException('Пользователь с таким email уже существует');
@@ -23,6 +23,11 @@ readonly class UserFactory
 
         $id = UserId::generate();
 
-        return new User($id, $email, $hashedPassword);
+        return new User(
+            id: $id,
+            email: $email,
+            name: $name,
+            password: $hashedPassword
+        );
     }
 }

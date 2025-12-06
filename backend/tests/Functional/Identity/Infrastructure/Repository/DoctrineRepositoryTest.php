@@ -33,9 +33,10 @@ class DoctrineRepositoryTest extends TestCase
     {
         // arrange
         $email = $this->getFaker()->email();
+        $name = $this->getFaker()->name();
         $password = $this->getFaker()->password();
 
-        $user = $this->factory->create($email, $password);
+        $user = $this->factory->create($email, $name, $password);
 
         // act
         $this->repository->add($user);
