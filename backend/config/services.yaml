@@ -47,3 +47,7 @@ services:
         App\Shared\Application\Query\QueryHandlerInterface:
             tags:
                 - { name: messenger.message_handler, bus: query.bus }
+
+    App\Shared\Infrastructure\Symfony\EventSubscriber\ExceptionSubscriber:
+        arguments:
+            $environment: '%kernel.environment%'
