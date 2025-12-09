@@ -24,15 +24,15 @@
 			'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:-translate-y-0.5',
 		secondary: 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
 	};
+
+	const variantClass = variantClasses[variant] || variantClasses.primary;
 </script>
 
 <button
 	{type}
 	{disabled}
-	on:click={onclick}
-	class="group relative w-full flex justify-center items-center py-3 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed {variantClasses[
-		variant
-	]}"
+	onclick={onclick}
+	class="group relative w-full flex justify-center items-center py-3 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed {variantClass}"
 	style="height: var(--btn-height); border-radius: var(--radius-control); font-size: 16px;"
 >
 	{#if loading}

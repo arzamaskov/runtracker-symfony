@@ -35,8 +35,8 @@
 		{required}
 		{placeholder}
 		bind:value
-		on:blur={onblur}
-		on:input={oninput}
+		onblur={onblur}
+		oninput={oninput}
 		class="appearance-none relative block w-full px-4 py-3 border border-slate-200 placeholder-slate-400 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all sm:text-sm resize-none"
 		style="border-radius: var(--radius-input);"
 	></textarea>

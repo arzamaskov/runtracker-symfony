@@ -57,7 +57,7 @@
 		<div class="space-y-8">
 			<!-- Date & Time -->
 			<div>
-				<label class="block text-sm font-medium text-gray-500 mb-1">Date & Time</label>
+				<div class="block text-sm font-medium text-gray-500 mb-1">Date & Time</div>
 				<div class="text-lg font-semibold text-gray-900">
 					{run.date}
 				</div>
@@ -67,19 +67,19 @@
 			<!-- Stats Grid -->
 			<div class="grid grid-cols-3 gap-8">
 				<div>
-					<label class="block text-sm font-medium text-gray-500 mb-1">Distance</label>
+					<div class="block text-sm font-medium text-gray-500 mb-1">Distance</div>
 					<div class="text-2xl font-bold text-gray-900">
 						{run.distance}
 					</div>
 				</div>
 				<div>
-					<label class="block text-sm font-medium text-gray-500 mb-1">Duration</label>
+					<div class="block text-sm font-medium text-gray-500 mb-1">Duration</div>
 					<div class="text-2xl font-bold text-gray-900">
 						{run.duration}
 					</div>
 				</div>
 				<div>
-					<label class="block text-sm font-medium text-gray-500 mb-1">Pace</label>
+					<div class="block text-sm font-medium text-gray-500 mb-1">Pace</div>
 					<div class="text-2xl font-bold text-gray-900">
 						{run.pace}
 					</div>
@@ -88,7 +88,7 @@
 
 			<!-- Notes -->
 			<div>
-				<label class="block text-sm font-medium text-gray-500 mb-1">Notes</label>
+				<div class="block text-sm font-medium text-gray-500 mb-1">Notes</div>
 				<div class="text-gray-900">{run.notes}</div>
 			</div>
 		</div>

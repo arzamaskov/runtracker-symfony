@@ -29,6 +29,7 @@
 	}
 
 	async function handleSubmit(event: Event) {
+		event.preventDefault();
 		touched.name = true;
 		touched.email = true;
 		touched.password = true;
@@ -97,7 +98,7 @@
 				<p class="text-sm">{errors.general}</p>
 			</div>
 		{/if}
-		<form class="mt-8 space-y-6" on:submit|preventDefault={handleSubmit} novalidate>
+		<form class="mt-8 space-y-6" onsubmit={handleSubmit} novalidate>
 			<div class="space-y-5">
 				<FormInput
 					id="name"

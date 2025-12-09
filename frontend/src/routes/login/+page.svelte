@@ -26,6 +26,7 @@
 	}
 
 	async function handleSubmit(event: Event) {
+		event.preventDefault();
 		touched.email = true;
 		touched.password = true;
 		errors.email = validateEmail(email);
@@ -89,7 +90,7 @@
 				<p class="text-sm">{errors.general}</p>
 			</div>
 		{/if}
-		<form class="mt-8 space-y-6" on:submit|preventDefault={handleSubmit} novalidate>
+		<form class="mt-8 space-y-6" onsubmit={handleSubmit} novalidate>
 			<div class="space-y-5">
 				<FormInput
 					id="email-address"
@@ -134,9 +135,9 @@
 				</div>
 
 				<div class="text-sm">
-					<a href="#" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+					<button type="button" class="font-medium text-blue-600 hover:text-blue-500 transition-colors bg-transparent border-0 p-0 cursor-pointer">
 						Забыли пароль?
-					</a>
+					</button>
 				</div>
 			</div>
 
