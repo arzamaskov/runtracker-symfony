@@ -25,7 +25,8 @@
 		secondary: 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
 	};
 
-	const variantClass = variantClasses[variant] || variantClasses.primary;
+	const resolvedVariant: ButtonVariant = variant ?? 'primary';
+	const variantClass = variantClasses[resolvedVariant];
 </script>
 
 <button
