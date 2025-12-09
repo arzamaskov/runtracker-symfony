@@ -12,6 +12,7 @@
             <generator strategy="NONE" />
         </id>
         <field name="email"/>
+        <field name="name" nullable="true"/>
         <field name="password" nullable="true"/>
         <field name="roles" type="json">
             <options>

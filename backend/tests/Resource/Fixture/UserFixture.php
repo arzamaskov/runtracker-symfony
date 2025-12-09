@@ -21,8 +21,9 @@ final class UserFixture extends Fixture
 
     public function load(ObjectManager $manager): void
     {
+        $name = $this->getFaker()->name();
         $password = $this->getFaker()->password();
-        $user = $this->factory->create(self::EMAIL, $password);
+        $user = $this->factory->create(self::EMAIL, $name, $password);
         $manager->persist($user);
         $manager->flush();
     }

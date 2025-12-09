@@ -23,7 +23,7 @@ final readonly class CreateUserCommandHandler implements CommandHandlerInterface
     {
         $hashedPassword = $this->passwordHasher->hash($command->password);
 
-        $user = $this->factory->create($command->email, $hashedPassword);
+        $user = $this->factory->create($command->email, $command->name, $hashedPassword);
         $this->repository->add($user);
 
         return $user->id();

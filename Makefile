@@ -1,4 +1,4 @@
-.PHONY: help build up down restart logs shell composer pnpm console migrate test lint stan
+.PHONY: help build up down restart logs shell shell-frontend composer pnpm console migrate test lint lint-fix lint-frontend lint-frontend-fix stan
 
 # Цвета для вывода
 GREEN  := \033[0;32m
@@ -49,6 +49,9 @@ restart: ## Перезапустить все контейнеры
 shell: ## Подключиться к контейнеру PHP
 	$(DC_EXEC) php sh
 
+shell-frontend: ## Подключиться к контейнеру Frontend
+	$(DC) exec frontend sh
+
 # ============================================
 # База данных (PostgreSQL)
 # ============================================
@@ -91,4 +94,22 @@ deptrac: ## Проверить код на соответствие архите
 stan: ## Запустить статический анализ кода (PHPStan)
 	$(DC_EXEC) php ./vendor/bin/phpstan analyse src tests --memory-limit=2G
 
+# ============================================
+# Frontend качество кода
+# ============================================
+
+lint-frontend: ## Проверить код фронтенда (ESLint + Prettier)
+	$(DC) exec frontend pnpm lint
+
+lint-frontend-fix: ## Автоматически исправить код фронтенда
+	$(DC) exec frontend pnpm lint:fix
+
+format-frontend: ## Форматировать код фронтенда (Prettier)
+	$(DC) exec frontend pnpm format
+
+check-frontend: ## Проверить типы TypeScript/Svelte (svelte-check)
+	$(DC) exec frontend pnpm check
+
 ci: lint deptrac stan test ## Комбо для локальной проверки перед git push
+
+ci-frontend: check-frontend lint-frontend ## Комбо для проверки фронтенда
