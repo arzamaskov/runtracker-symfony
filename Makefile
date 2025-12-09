@@ -107,6 +107,9 @@ lint-frontend-fix: ## Автоматически исправить код фр�
 format-frontend: ## Форматировать код фронтенда (Prettier)
 	$(DC) exec frontend pnpm format
 
+check-frontend: ## Проверить типы TypeScript/Svelte (svelte-check)
+	$(DC) exec frontend pnpm check
+
 ci: lint deptrac stan test ## Комбо для локальной проверки перед git push
 
-ci-frontend: lint-frontend ## Комбо для проверки фронтенда
+ci-frontend: check-frontend lint-frontend ## Комбо для проверки фронтенда
